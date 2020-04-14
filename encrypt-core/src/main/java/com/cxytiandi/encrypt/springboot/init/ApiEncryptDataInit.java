@@ -28,39 +28,39 @@ import com.cxytiandi.encrypt.springboot.annotation.Encrypt;
 import com.cxytiandi.encrypt.springboot.annotation.EncryptIgnore;
 
 public class ApiEncryptDataInit implements ApplicationContextAware {
-	
+
 	private Logger logger = LoggerFactory.getLogger(ApiEncryptDataInit.class);
-	
+
 	/**
 	 * 需要对响应内容进行加密的接口URI<br>
 	 * 比如：/user/list<br>
 	 * 不支持@PathVariable格式的URI
 	 */
 	public static List<String> responseEncryptUriList = new ArrayList<String>();
-	
+
 	/**
 	 * 需要对请求内容进行解密的接口URI<br>
 	 * 比如：/user/list<br>
 	 * 不支持@PathVariable格式的URI
 	 */
 	public static List<String> requestDecyptUriList = new ArrayList<String>();
-    
+
 	/**
 	 * 忽略加密的接口URI<br>
 	 * 比如：/user/list<br>
 	 * 不支持@PathVariable格式的URI
 	 */
 	public static List<String> responseEncryptUriIgnoreList = new ArrayList<String>();
-	
+
 	/**
 	 * 忽略对请求内容进行解密的接口URI<br>
 	 * 比如：/user/list<br>
 	 * 不支持@PathVariable格式的URI
 	 */
 	public static List<String> requestDecyptUriIgnoreList = new ArrayList<String>();
-	
+
 	private String contextPath;
-	
+
     @Override
     public void setApplicationContext(ApplicationContext ctx) throws BeansException {
     	this.contextPath = ctx.getEnvironment().getProperty("server.servlet.context-path");
@@ -118,52 +118,52 @@ public class ApiEncryptDataInit implements ApplicationContextAware {
             }
         }
 	}
-    
+
     private String getApiUri(Class<?> clz, Method method) {
     	String methodType = "";
         StringBuilder uri = new StringBuilder();
-        
+
         RequestMapping reqMapping = AnnotationUtils.findAnnotation(clz, RequestMapping.class);
         if (reqMapping != null) {
         	uri.append(formatUri(reqMapping.value()[0]));
 		}
-        
+
         GetMapping getMapping = AnnotationUtils.findAnnotation(method, GetMapping.class);
         PostMapping postMapping = AnnotationUtils.findAnnotation(method, PostMapping.class);
         RequestMapping requestMapping = AnnotationUtils.findAnnotation(method, RequestMapping.class);
         PutMapping putMapping = AnnotationUtils.findAnnotation(method, PutMapping.class);
         DeleteMapping deleteMapping = AnnotationUtils.findAnnotation(method, DeleteMapping.class);
-        
+
         if (getMapping != null) {
         	methodType = HttpMethodTypePrefixConstant.GET;
             uri.append(formatUri(getMapping.value()[0]));
-            
+
         } else if (postMapping != null) {
         	methodType = HttpMethodTypePrefixConstant.POST;
             uri.append(formatUri(postMapping.value()[0]));
-            
+
         } else if (putMapping != null) {
         	methodType = HttpMethodTypePrefixConstant.PUT;
             uri.append(formatUri(putMapping.value()[0]));
-            
+
         } else if (deleteMapping != null) {
         	methodType = HttpMethodTypePrefixConstant.DELETE;
             uri.append(formatUri(deleteMapping.value()[0]));
-            
+
         } else if (requestMapping != null) {
         	RequestMethod m = requestMapping.method()[0];
         	methodType = m.name().toLowerCase() + ":";
             uri.append(formatUri(requestMapping.value()[0]));
-            
-        } 
-        
-        if (StringUtils.hasText(this.contextPath)) {
+
+        }
+
+		if (StringUtils.hasText(this.contextPath) && !"/".equals(this.contextPath)) {
         	 return methodType + this.contextPath + uri.toString();
 		}
-        
+
         return methodType + uri.toString();
     }
-    
+
     private String formatUri(String uri) {
     	if (uri.startsWith("/")) {
 			return uri;
